@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Budget Dashboard</title>
+  <title>Budget Dashboard (Phase 2)</title>
 
   <style>
     body { font-family: Arial; padding: 20px; }
@@ -9,13 +9,14 @@
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background: #f4f4f4; }
+    .red { color: red; font-weight: bold; }
+    .green { color: green; font-weight: bold; }
   </style>
-
 </head>
 
 <body>
 
-<h1>✅ Budget Dashboard</h1>
+<h1>✅ Budget Dashboard (Phase 2)</h1>
 
 <h3>Paste Excel Data</h3>
 
@@ -42,28 +43,39 @@
   <tbody id="tableBody"></tbody>
 </table>
 
-<h2>Spend by Category</h2>
+<h2>Variance Analysis</h2>
 
-<ul id="categoryTotals"></ul>
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Actual</th>
+      <th>Budget</th>
+      <th>Variance</th>
+      <th>%</th>
+    </tr>
+  </thead>
+  <tbody id="varianceTable"></tbody>
+</table>
 
 <script>
 
 let expenses = [];
+let budgets = {};
 
 function importData() {
   const text = document.getElementById("data").value;
+  const rows = text.split(/\\r?\\n/);
 
-  const rows = text.split(/\r?\n/);
+  expenses = []; // ✅ reset each import
 
   for (let row of rows) {
-
-    const cols = row.split("\t"); // ✅ ONLY split on TAB
-
+    const cols = row.split("\\t");
     if (cols.length < 3) continue;
 
     const cleanAmount = cols[2]
-      .replace(/,/g, "")           // remove commas
-      .replace(/[^0-9.-]/g, "")    // remove $ and symbols
+      .replace(/,/g, "")
+      .replace(/[^0-9.-]/g, "")
       .trim();
 
     const item = {
@@ -81,44 +93,63 @@ function importData() {
 }
 
 function render() {
-
   let total = 0;
   const table = document.getElementById("tableBody");
+  const varianceTable = document.getElementById("varianceTable");
   const categoryMap = {};
 
   table.innerHTML = "";
+  varianceTable.innerHTML = "";
 
   expenses.forEach(e => {
-
     total += e.amount;
 
-    // ✅ Add table row
     const row = document.createElement("tr");
-
     row.innerHTML = `
       <td>${e.date}</td>
       <td>${e.category}</td>
       <td>${e.amount.toFixed(2)}</td>
     `;
-
     table.appendChild(row);
 
-    // ✅ Category totals
     categoryMap[e.category] =
       (categoryMap[e.category] || 0) + e.amount;
   });
 
   document.getElementById("total").innerText = total.toFixed(2);
 
-  // ✅ Render category totals
-  const list = document.getElementById("categoryTotals");
-  list.innerHTML = "";
-
+  // ✅ Variance table
   for (let cat in categoryMap) {
-    const li = document.createElement("li");
-    li.innerText = `${cat}: $${categoryMap[cat].toFixed(2)}`;
-    list.appendChild(li);
+    const actual = categoryMap[cat];
+    const budget = parseFloat(budgets[cat] || 0);
+    const variance = actual - budget;
+    const pct = budget ? (variance / budget) * 100 : 0;
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${cat}</td>
+      <td>$${actual.toFixed(2)}</td>
+      <td>
+        <input
+          type="number"
+          placeholder="Budget"
+          onblur="setBudget('${cat}', this.value)"
+        />
+      </td>
+      <td class="${variance > 0 ? 'red' : 'green'}">
+        $${variance.toFixed(2)}
+      </td>
+      <td>${pct.toFixed(1)}%</td>
+    `;
+
+    varianceTable.appendChild(row);
   }
+}
+
+function setBudget(cat, value) {
+  budgets[cat] = value;
+  render();
 }
 
 </script>
