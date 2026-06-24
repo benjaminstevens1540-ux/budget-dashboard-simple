@@ -47,7 +47,7 @@ function importData() {
 const rows = text.split(/\r?\n/);
 
 for (let row of rows) {
-  const cols = row.split(/\t|,/);
+  const cols = row.split("\t");
 
   if (cols.length < 3) continue;
 
