@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Budget Dashboard</title>
+
   <style>
     body { font-family: Arial; padding: 20px; }
     textarea { width: 100%; }
@@ -9,14 +10,20 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background: #f4f4f4; }
   </style>
+
 </head>
+
 <body>
 
 <h1>✅ Budget Dashboard</h1>
 
 <h3>Paste Excel Data</h3>
 
-<textarea id="data" rows="6"></textarea><br><br>
+<textarea id="data" rows="6" placeholder="Example:
+2026-06-01    Groceries    50
+2026-06-02    Rent    1,200"></textarea>
+
+<br><br>
 
 <button onclick="importData()">Import Data</button>
 
@@ -24,7 +31,7 @@
 
 <h2>Transactions</h2>
 
-<table id="table">
+<table>
   <thead>
     <tr>
       <th>Date</th>
@@ -32,7 +39,7 @@
       <th>Amount</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody id="tableBody"></tbody>
 </table>
 
 <h2>Spend by Category</h2>
@@ -40,26 +47,30 @@
 <ul id="categoryTotals"></ul>
 
 <script>
+
 let expenses = [];
 
 function importData() {
   const text = document.getElementById("data").value;
-const rows = text.split(/\r?\n/);
 
-for (let row of rows) {
-  const cols = row.split("\t");
+  const rows = text.split(/\r?\n/);
 
-  if (cols.length < 3) continue;
+  for (let row of rows) {
 
-  const cleanAmount = cols[2]
-    .replace(/[^0-9.-]/g, "")  // removes $, commas, spaces, etc.
-    .trim();
+    const cols = row.split("\t"); // ✅ ONLY split on TAB
 
-  const item = {
-    date: cols[0].trim(),
-    category: cols[1].trim(),
-    amount: parseFloat(cleanAmount)
-  };
+    if (cols.length < 3) continue;
+
+    const cleanAmount = cols[2]
+      .replace(/,/g, "")           // remove commas
+      .replace(/[^0-9.-]/g, "")    // remove $ and symbols
+      .trim();
+
+    const item = {
+      date: cols[0].trim(),
+      category: cols[1].trim(),
+      amount: parseFloat(cleanAmount)
+    };
 
     if (!item.date || !item.category || isNaN(item.amount)) continue;
 
@@ -70,40 +81,47 @@ for (let row of rows) {
 }
 
 function render() {
+
   let total = 0;
-  const tableBody = document.querySelector("#table tbody");
+  const table = document.getElementById("tableBody");
   const categoryMap = {};
 
-  tableBody.innerHTML = "";
+  table.innerHTML = "";
 
   expenses.forEach(e => {
+
     total += e.amount;
 
-    // Add to table
-    const row = `<tr>
+    // ✅ Add table row
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
       <td>${e.date}</td>
       <td>${e.category}</td>
       <td>${e.amount.toFixed(2)}</td>
-    </tr>`;
-    tableBody.innerHTML += row;
+    `;
 
-    // Category totals
-    categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
+    table.appendChild(row);
+
+    // ✅ Category totals
+    categoryMap[e.category] =
+      (categoryMap[e.category] || 0) + e.amount;
   });
 
   document.getElementById("total").innerText = total.toFixed(2);
 
-  // Render category totals
+  // ✅ Render category totals
   const list = document.getElementById("categoryTotals");
   list.innerHTML = "";
 
-  Object.entries(categoryMap).forEach(([cat, amt]) => {
-    const item = `<li>${cat}: $${amt.toFixed(2)}</li>`;
-    list.innerHTML += item;
-  });
+  for (let cat in categoryMap) {
+    const li = document.createElement("li");
+    li.innerText = `${cat}: $${categoryMap[cat].toFixed(2)}`;
+    list.appendChild(li);
+  }
 }
+
 </script>
 
 </body>
 </html>
-
