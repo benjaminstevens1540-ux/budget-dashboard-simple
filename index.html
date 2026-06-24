@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Budget Dashboard (Phase 2)</title>
+  <title>Budget Dashboard (FINAL FIX)</title>
   <style>
     body { font-family: Arial; padding: 20px; }
     textarea { width: 100%; }
@@ -14,70 +14,36 @@
 </head>
 <body>
 
-<h1>✅ Budget Dashboard (Phase 2)</h1>
+<h1>✅ Budget Dashboard</h1>
 
-<h3>Paste Excel Data</h3>
-
-<textarea id="data" rows="6" placeholder="Paste from Excel:
-2026-06-01    Groceries    50.15
-2026-06-02    Rent    1,200
-2026-06-03    Groceries    $25"></textarea>
-
+<textarea id="data" rows="6"></textarea>
 <br><br>
-
 <button onclick="importData()">Import Data</button>
 
-<h2>Total Spend: $<span id="total">0</span></h2>
-
-<h2>Transactions</h2>
+<h2>Total: $<span id="total">0</span></h2>
 
 <table>
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Category</th>
-      <th>Amount</th>
-    </tr>
-  </thead>
   <tbody id="tableBody"></tbody>
 </table>
 
-<h2>Variance Analysis</h2>
-
-<table>
-  <thead>
-    <tr>
-      <th>Category</th>
-      <th>Actual</th>
-      <th>Budget</th>
-      <th>Variance</th>
-      <th>%</th>
-    </tr>
-  </thead>
-  <tbody id="varianceTable"></tbody>
-</table>
-
 <script>
-
 let expenses = [];
-let budgets = {};
 
 function importData() {
   const text = document.getElementById("data").value;
 
-  // ✅ Split rows correctly
-  const rows = text.split(/\r?\n/);
+  // ✅ CRITICAL FIX: trim + correct newline split
+  const rows = text.trim().split(/\r?\n/);
 
   expenses = [];
 
   for (let row of rows) {
 
-    // ✅ Handles tabs OR extra spaces
-    const cols = row.split(/\t|\s{2,}/);
+    // ✅ SPLIT on tabs OR multiple spaces
+    const cols = row.trim().split(/\t+| {2,}/);
 
     if (cols.length < 3) continue;
 
-    // ✅ Clean amount
     const cleanAmount = cols[2]
       .replace(/,/g, "")
       .replace(/[^0-9.-]/g, "")
@@ -87,78 +53,13 @@ function importData() {
 
     if (isNaN(amount)) continue;
 
-    const item = {
-      date: cols[0].trim(),
-      category: cols[1].trim(),
-      amount: amount
-    };
-
-    expenses.push(item);
+    expenses.push(amount);
   }
 
-  render();
-}
-
-function render() {
-  let total = 0;
-  const table = document.getElementById("tableBody");
-  const varianceTable = document.getElementById("varianceTable");
-  const categoryMap = {};
-
-  table.innerHTML = "";
-  varianceTable.innerHTML = "";
-
-  expenses.forEach(e => {
-    total += e.amount;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${e.date}</td>
-      <td>${e.category}</td>
-      <td>$${e.amount.toFixed(2)}</td>
-    `;
-
-    table.appendChild(row);
-
-    categoryMap[e.category] =
-      (categoryMap[e.category] || 0) + e.amount;
-  });
+  let total = expenses.reduce((a, b) => a + b, 0);
 
   document.getElementById("total").innerText = total.toFixed(2);
-
-  for (let cat in categoryMap) {
-    const actual = categoryMap[cat];
-    const budget = parseFloat(budgets[cat] || 0);
-    const variance = actual - budget;
-    const pct = budget ? (variance / budget) * 100 : 0;
-
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${cat}</td>
-      <td>$${actual.toFixed(2)}</td>
-      <td>
-        <input
-          type="number"
-          placeholder="Budget"
-          onblur="setBudget('${cat}', this.value)"
-        />
-      </td>
-      <td class="${variance > 0 ? 'red' : 'green'}">
-        $${variance.toFixed(2)}
-      </td>
-      <td>${pct.toFixed(1)}%</td>
-    `;
-
-    varianceTable.appendChild(row);
-  }
 }
-
-function setBudget(cat, value) {
-  budgets[cat] = value;
-  render();
-}
-
 </script>
 
 </body>
