@@ -70,7 +70,7 @@ function importData() {
   expenses = []; // ✅ reset each import
 
   for (let row of rows) {
-    const cols = row.split("\\t");
+    const cols = row.split(/\t|\s{2,}/);
     if (cols.length < 3) continue;
 
     const cleanAmount = cols[2]
