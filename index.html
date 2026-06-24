@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Budget Dashboard (Phase 2)</title>
-
   <style>
     body { font-family: Arial; padding: 20px; }
     textarea { width: 100%; }
@@ -13,16 +12,16 @@
     .green { color: green; font-weight: bold; }
   </style>
 </head>
-
 <body>
 
 <h1>✅ Budget Dashboard (Phase 2)</h1>
 
 <h3>Paste Excel Data</h3>
 
-<textarea id="data" rows="6" placeholder="Example:
-2026-06-01    Groceries    50
-2026-06-02    Rent    1,200"></textarea>
+<textarea id="data" rows="6" placeholder="Paste from Excel:
+2026-06-01    Groceries    50.15
+2026-06-02    Rent    1,200
+2026-06-03    Groceries    $25"></textarea>
 
 <br><br>
 
@@ -65,26 +64,34 @@ let budgets = {};
 
 function importData() {
   const text = document.getElementById("data").value;
-  const rows = text.split(/\\r?\\n/);
 
-  expenses = []; // ✅ reset each import
+  // ✅ Split rows correctly
+  const rows = text.split(/\r?\n/);
+
+  expenses = [];
 
   for (let row of rows) {
+
+    // ✅ Handles tabs OR extra spaces
     const cols = row.split(/\t|\s{2,}/);
+
     if (cols.length < 3) continue;
 
+    // ✅ Clean amount
     const cleanAmount = cols[2]
       .replace(/,/g, "")
       .replace(/[^0-9.-]/g, "")
       .trim();
 
+    const amount = parseFloat(cleanAmount);
+
+    if (isNaN(amount)) continue;
+
     const item = {
       date: cols[0].trim(),
       category: cols[1].trim(),
-      amount: parseFloat(cleanAmount)
+      amount: amount
     };
-
-    if (!item.date || !item.category || isNaN(item.amount)) continue;
 
     expenses.push(item);
   }
@@ -108,8 +115,9 @@ function render() {
     row.innerHTML = `
       <td>${e.date}</td>
       <td>${e.category}</td>
-      <td>${e.amount.toFixed(2)}</td>
+      <td>$${e.amount.toFixed(2)}</td>
     `;
+
     table.appendChild(row);
 
     categoryMap[e.category] =
@@ -118,7 +126,6 @@ function render() {
 
   document.getElementById("total").innerText = total.toFixed(2);
 
-  // ✅ Variance table
   for (let cat in categoryMap) {
     const actual = categoryMap[cat];
     const budget = parseFloat(budgets[cat] || 0);
