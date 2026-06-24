@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Budget Dashboard</title>
+</head>
+<body>
+
+<h1>✅ Budget Dashboard</h1>
+
+<p>If you see this, it is working.</p>
+
+<h3>Paste Excel Data</h3>
+
+<textarea id="data" rows="10" cols="60"></textarea><br><br>
+
+<button onclick="importData()">Import Data</button>
+
+<h3>Total Spend: $<span id="total">0</span></h3>
+
+<script>
+function importData() {
+  const text = document.getElementById("data").value;
+  const rows = text.split("\\n");
+
+  let total = 0;
+
+  for (let row of rows) {
+    const cols = row.split(/\\t|,/);
+    if (cols.length < 3) continue;
+
+    const amount = parseFloat(cols[2]);
+    if (!isNaN(amount)) {
+      total += amount;
+    }
+  }
+
+  document.getElementById("total").innerText = total.toFixed(2);
+}
+</script>
+
+</body>
+</html>
