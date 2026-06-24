@@ -44,17 +44,22 @@ let expenses = [];
 
 function importData() {
   const text = document.getElementById("data").value;
-  const rows = text.split("\\n");
+const rows = text.split(/\r?\n/);
 
-  for (let row of rows) {
-    const cols = row.split(/\\t|,/);
-    if (cols.length < 3) continue;
+for (let row of rows) {
+  const cols = row.split(/\t|,/);
 
-    const item = {
-      date: cols[0].trim(),
-      category: cols[1].trim(),
-      amount: parseFloat(cols[2])
-    };
+  if (cols.length < 3) continue;
+
+  const cleanAmount = cols[2]
+    .replace(/[^0-9.-]/g, "")  // removes $, commas, spaces, etc.
+    .trim();
+
+  const item = {
+    date: cols[0].trim(),
+    category: cols[1].trim(),
+    amount: parseFloat(cleanAmount)
+  };
 
     if (!item.date || !item.category || isNaN(item.amount)) continue;
 
